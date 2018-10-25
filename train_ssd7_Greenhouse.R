@@ -77,7 +77,7 @@ ssd_box_encoder = SSDBoxEncoder$new(img_height=img_height,
 train_dataset = BatchGenerator$new(box_output_format = c('class_id', 'xmin', 'xmax', 'ymin', 'ymax')) # This is the format in which the generator is supposed to output the labels. At the moment it **must** be the format set here.
 
 train_dataset$parse_csv(
-  images_path = "C:/Users/adamcummings/Documents/ssdkeras/Greenhouse", # make sure to unzip the faces file and put here the correct paths
+  images_path = "C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse", # make sure to unzip the faces file and put here the correct paths
   labels_path = "trainGH.csv",
   include_classes = 'all',
   input_format = c('image_name', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id')
@@ -102,7 +102,7 @@ n_train_samples = train_dataset$get_n_samples()
 
 val_dataset = BatchGenerator$new(box_output_format = c('class_id', 'xmin', 'xmax', 'ymin', 'ymax'))
 
-val_dataset$parse_csv(images_path = "C:/Users/adamcummings/Documents/ssdkeras/Greenhouse",
+val_dataset$parse_csv(images_path = "C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse",
                       labels_path = "valGH.csv",
                       include_classes = 'all',
                       input_format = c('image_name', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id')
