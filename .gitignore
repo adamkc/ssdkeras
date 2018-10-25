@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 ssdkeras.Rproj
+faces/
+Greenhouse/
+checkpoints3.h5
+data/

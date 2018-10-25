@@ -216,12 +216,12 @@ layer_anchor <- function(object, img_height,
     img_width,
     this_scale,
     next_scale,
-    aspect_ratios = c(0.5, 1.0, 2.0),
-    two_boxes_for_ar1 = TRUE,
-    limit_boxes = TRUE,
-    variances = c(1.0, 1.0, 1.0, 1.0),
-    coords = 'centroids',
-    normalize_coords = FALSE,
+    aspect_ratios = aspect_ratios,
+    two_boxes_for_ar1 = two_boxes_for_ar1,
+    limit_boxes = limit_boxes,
+    variances = variances,
+    coords = coords,
+    normalize_coords = normalize_coords,
     ...
   ))
 }

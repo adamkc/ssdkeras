@@ -25,17 +25,17 @@ normalize_coords = FALSE # Whether or not the model is supposed to use relative 
 K$clear_session() # Clear previous models from memory.
 # The output `predictor_sizes` is needed below to set up `SSDBoxEncoder`
 modelOut = build_model(image_size = c(img_height, img_width, img_channels),
-                                     n_classes=n_classes,
-                                     min_scale=min_scale,
-                                     max_scale=max_scale,
-                                     scales=scales,
-                                     aspect_ratios_global=aspect_ratios,
-                                     aspect_ratios_per_layer=NULL,
-                                     two_boxes_for_ar1=two_boxes_for_ar1,
-                                     limit_boxes=limit_boxes,
-                                     variances=variances,
-                                     coords=coords,
-                                     normalize_coords=normalize_coords)
+                       n_classes=n_classes,
+                       min_scale=min_scale,
+                       max_scale=max_scale,
+                       scales=scales,
+                       aspect_ratios_global=aspect_ratios,
+                       aspect_ratios_per_layer=NULL,
+                       two_boxes_for_ar1=two_boxes_for_ar1,
+                       limit_boxes=limit_boxes,
+                       variances=variances,
+                       coords=coords,
+                       normalize_coords=normalize_coords)
 model <- modelOut$model
 predictor_sizes <- modelOut$predictor_sizes
 
@@ -56,21 +56,21 @@ model$compile(optimizer=adam, loss=ssd_loss$compute_loss)
 # 4: Instantiate an encoder that can encode ground truth labels into the format needed by the SSD loss function
 
 ssd_box_encoder = SSDBoxEncoder$new(img_height=img_height,
-                                img_width=img_width,
-                                n_classes=n_classes,
-                                predictor_sizes=predictor_sizes,
-                                min_scale=min_scale,
-                                max_scale=max_scale,
-                                scales=scales,
-                                aspect_ratios_global=aspect_ratios,
-                                aspect_ratios_per_layer= NULL,
-                                two_boxes_for_ar1=two_boxes_for_ar1,
-                                limit_boxes=limit_boxes,
-                                variances=variances,
-                                pos_iou_threshold=0.5,
-                                neg_iou_threshold=0.2,
-                                coords=coords,
-                                normalize_coords=normalize_coords)
+                                    img_width=img_width,
+                                    n_classes=n_classes,
+                                    predictor_sizes=predictor_sizes,
+                                    min_scale=min_scale,
+                                    max_scale=max_scale,
+                                    scales=scales,
+                                    aspect_ratios_global=aspect_ratios,
+                                    aspect_ratios_per_layer= NULL,
+                                    two_boxes_for_ar1=two_boxes_for_ar1,
+                                    limit_boxes=limit_boxes,
+                                    variances=variances,
+                                    pos_iou_threshold=0.5,
+                                    neg_iou_threshold=0.2,
+                                    coords=coords,
+                                    normalize_coords=normalize_coords)
 
 # 5: Create the training set batch generator
 
@@ -106,7 +106,7 @@ val_dataset$parse_csv(images_path = "D:/faces",
                       labels_path = "val.csv",
                       include_classes = 'all',
                       input_format = c('image_name', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id')
-                      )
+)
 
 val_generator = val_dataset$generate(batch_size = batch_size,
                                      train = TRUE,

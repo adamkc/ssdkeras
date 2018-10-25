@@ -132,7 +132,6 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                  self$labels <- self$labels[samp]
                                  # Shuffle the data before we begin
                                  current = 1L
-                                 # counter = 0L
 
                                  # Find out the indices of the box coordinates in the label data
                                  xmin = which(self$box_output_format =='xmin')
@@ -165,8 +164,10 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                    )
 
                                    batch_y = self$labels[current : min((current + batch_size - 1L), length(self$filenames))]
+                                   print(batch_y)
+                                   print(str(batch_X))
 
-                                   this_filenames = self$filenames[current : min((current + batch_size - 1L), length(self$filenames))] # The filenames of the files in the current batch
+                                   #this_filenames = self$filenames[current : min((current + batch_size - 1L), length(self$filenames))] # The filenames of the files in the current batch
 
                                    if (diagnostics) {
                                      original_images = batch_X # The original, unaltered images
@@ -174,8 +175,8 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                    }
 
                                    current <<- current + batch_size
-                                   # counter <<- counter + 1L
-                                   # print(counter)
+                                   print(current)
+
 
                                    # At this point we're done producing the batch. Now perform some
                                    # optional image transformations:
@@ -258,24 +259,7 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                        }
                                      }
 
-                                     # if (scale[1]) {
-                                     #   if (runif(1) < scale[3]) {
-                                     #     bg_image <- image_read(array(runif(1), c(250, 250, 3)))
-                                     #     scaleFactorX <- round(runif(1, scale[1], scale[2]), 2)
-                                     #     scaleFactorY <- round(runif(1, scale[1], scale[2]), 2)
-                                     #     scaleStringX <- str_c(scaleFactorX * 100, "%")
-                                     #     scaleStringY <- str_c(scaleFactorY * 100, "%")
-                                     #     scaleGeometry <- str_c(scaleStringX, "x", scaleStringY)
-                                     #
-                                     #     temp_image <- image_read(batch_X[i, , ,] / 255) %>%
-                                     #       image_scale(scaleGeometry)
-                                     #     tempX <- image_composite(bg_image, temp_image) %>%
-                                     #       .[[1]] %>%
-                                     #       as.numeric()
-                                     #     batch_X[i, , ,] <- tempX[, , 1:3] * 255
-                                     #     batch_y[[i]] <- scaleBoxes2(batch_y[[i]], scaleFactorX, scaleFactorY)
-                                     #   }
-                                     # }
+
                                      if (scale[1]) {
                                        if (runif(1) < scale[3]) {
                                          bg_image <- image_read(array(runif(1), c(250, 250, 3)))
@@ -303,7 +287,7 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                    if (train) {
                                      return(list(batch_X, y_true))
                                    } else {
-                                     return(list(batch_X, batch_y, this_filenames))
+                                     return(list(batch_X, batch_y, batchFileNames))
                                    }
 
                                  }
