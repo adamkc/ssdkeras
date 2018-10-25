@@ -164,8 +164,8 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                    )
 
                                    batch_y = self$labels[current : min((current + batch_size - 1L), length(self$filenames))]
-                                   print(batch_y)
-                                   print(str(batch_X))
+                                   #print(batch_y)  #Debugging
+                                   #print(str(batch_X)) #Debugging
 
                                    #this_filenames = self$filenames[current : min((current + batch_size - 1L), length(self$filenames))] # The filenames of the files in the current batch
 
@@ -175,8 +175,6 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                    }
 
                                    current <<- current + batch_size
-                                   print(current)
-
 
                                    # At this point we're done producing the batch. Now perform some
                                    # optional image transformations:

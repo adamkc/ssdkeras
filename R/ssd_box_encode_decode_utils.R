@@ -436,7 +436,7 @@ SSDBoxEncoder <- R6::R6Class("SSDBoxEncoder",
                                      return(boxes_tensor)
                                    }
                                 },
-                               generate_encode_template = function(batch_size, diagnostics=FALSE) {
+                               generate_encode_template = function(batch_size, diagnostics=TRUE) {
                                  np = reticulate::import("numpy")
                                  # 1: Get the anchor box scaling factors for each conv layer from which we're going to make predictions
                                  #    If `scales` is given explicitly, we'll use that instead of computing it from `min_scale` and `max_scale`
@@ -537,19 +537,24 @@ SSDBoxEncoder <- R6::R6Class("SSDBoxEncoder",
                                  # 1: Generate the template for y_encoded
                                  y_encode_template = self$generate_encode_template(batch_size = length(ground_truth_labels), diagnostics = FALSE)
                                  y_encoded = np$copy(y_encode_template) # We'll write the ground truth box data to this array
-
+                                
                                  # 2: Match the boxes from `ground_truth_labels` to the anchor boxes in `y_encode_template`
                                  #    and for each matched box record the ground truth coordinates in `y_encoded`.
                                  #    Every time there is no match for a anchor box, record `class_id` 0 in `y_encoded` for that anchor box.
 
-                                 class_vector = np$eye(self$n_classes) # An identity matrix that we'll use as one-hot class vectors
+                                 class_vector = np$eye(self$n_classes) 
+                                 #^ An identity matrix that we'll use as one-hot class vectors
 
                                  for (i in seq_len(dim(y_encode_template)[1])) { # For each batch item...
-                                   available_boxes = np$ones(dim(y_encode_template)[2]) # 1 for all anchor boxes that are not yet matched to a ground truth box, 0 otherwise
-                                   negative_boxes = np$ones(dim(y_encode_template)[2]) # 1 for all negative boxes, 0 otherwise
-                                   for (true_box_idx in seq_len(nrow(ground_truth_labels[[i]]))) { # For each ground truth box belonging to the current batch item...
+                                   available_boxes = np$ones(dim(y_encode_template)[2]) 
+                                   #^ 1 for all anchor boxes that are not yet matched to a ground truth box, 0 otherwise
+                                   negative_boxes = np$ones(dim(y_encode_template)[2]) 
+                                   #^ 1 for all negative boxes, 0 otherwise
+                                   for (true_box_idx in seq_len(nrow(ground_truth_labels[[i]]))) { 
+                                     #^ For each ground truth box belonging to the current batch item...
                                      true_box = as.double(ground_truth_labels[[i]][true_box_idx,])
-                                     if (abs(true_box[3] - true_box[2]) < 0.001 || abs(true_box[5] - true_box[4]) < 0.001) next() # Protect ourselves against bad ground truth data: boxes with width or height equal to zero
+                                     if (abs(true_box[3] - true_box[2]) < 0.001 || abs(true_box[5] - true_box[4]) < 0.001) next() 
+                                     #^ Protect ourselves against bad ground truth data: boxes with width or height equal to zero
                                      if (self$normalize_coords) {
                                        true_box[2:3] = true_box[2:3] / self$img_width # Normalize xmin and xmax to be within [0,1]
                                        true_box[4:5] = true_box[4:5] / self$img_height # Normalize ymin and ymax to be within [0,1]
@@ -557,20 +562,30 @@ SSDBoxEncoder <- R6::R6Class("SSDBoxEncoder",
                                      if (self$coords == 'centroids') {
                                        true_box = convert_coordinates1D(true_box, start_index = 2L, conversion = 'minmax2centroids')
                                      }
-                                     similarities = iou(y_encode_template[i, , (self$n_classes + 1):(self$n_classes + 4)], true_box[-1], coords = self$coords) # The iou similarities for all anchor boxes
-                                     negative_boxes[similarities >= self$neg_iou_threshold] = 0 # If a negative box gets an IoU match >= `self.neg_iou_threshold`, it's no longer a valid negative box
-                                     similarities = similarities * available_boxes # Filter out anchor boxes which aren't available anymore (i.e. already matched to a different ground truth box)
+                                     similarities = iou(y_encode_template[i, , (self$n_classes + 1):(self$n_classes + 4)], true_box[-1], coords = self$coords) 
+                                     #^ The iou similarities for all anchor boxes
+                                     negative_boxes[similarities >= self$neg_iou_threshold] = 0 
+                                     #^ If a negative box gets an IoU match >= `self.neg_iou_threshold`, it's no longer a valid negative box
+                                     similarities = similarities * available_boxes 
+                                     #^ Filter out anchor boxes which aren't available anymore (i.e. already matched to a different ground truth box)
                                      available_and_thresh_met = np$copy(similarities)
-                                     available_and_thresh_met[available_and_thresh_met < self$pos_iou_threshold] = 0 # Filter out anchor boxes which don't meet the iou threshold
-                                     assign_indices = np$nonzero(available_and_thresh_met)[[1]] + 1 # Get the indices of the left-over anchor boxes to which we want to assign this ground truth box
+                                     available_and_thresh_met[available_and_thresh_met < self$pos_iou_threshold] = 0 
+                                     #^ Filter out anchor boxes which don't meet the iou threshold
+                                     assign_indices = np$nonzero(available_and_thresh_met)[[1]] + 1 
+                                     #^ Get the indices of the left-over anchor boxes to which we want to assign this ground truth box
                                      if (length(assign_indices) > 0) { # If we have any matches
                                        y_encoded[i,assign_indices,1:(self$n_classes + 4)] = rep(
-                                         np$concatenate(reticulate::tuple(class_vector[true_box[1] + 1,], true_box[-1]), axis = 0L),
-                                         each = length(assign_indices))# Write the ground truth box coordinates and class to all assigned anchor box positions. Remember that the last four elements of `y_encoded` are just dummy entries.
-                                       available_boxes[assign_indices] = 0 # Make the assigned anchor boxes unavailable for the next ground truth box
+                                         np$concatenate(reticulate::tuple(class_vector[true_box[1],], true_box[-1]), axis = 0L), ##Deleted the + 1 Here
+                                         each = length(assign_indices))
+                                       #^ Write the ground truth box coordinates and class to all assigned anchor box positions. 
+                                       #^ Remember that the last four elements of `y_encoded` are just dummy entries.
+                                       available_boxes[assign_indices] = 0 
+                                       #^ Make the assigned anchor boxes unavailable for the next ground truth box
                                      } else { # If we don't have any matches
                                        best_match_index = np$argmax(similarities) + 1 # Get the index of the best iou match out of all available boxes
-                                       y_encoded[i, best_match_index,1:(self$n_classes + 4)] = np$concatenate(reticulate::tuple(class_vector[true_box[1] + 1, ], true_box[-1]), axis=0L) # Write the ground truth box coordinates and class to the best match anchor box position
+                                       y_encoded[i, best_match_index,1:(self$n_classes + 4)] = 
+                                         np$concatenate(reticulate::tuple(class_vector[true_box[1], ], true_box[-1]), axis=0L) ##Deleted the + 1 Here
+                                       #^ Write the ground truth box coordinates and class to the best match anchor box position
                                        available_boxes[best_match_index] = 0 # Make the assigned anchor box unavailable for the next ground truth box
                                        negative_boxes[best_match_index] = 0 # The assigned anchor box is no longer a negative box
                                      }
