@@ -36,17 +36,20 @@ SSDLoss <- R6::R6Class("SSDLoss",
                          compute_loss = function(y_true, y_pred) {
                            y_true$set_shape(y_pred$get_shape())
                            batch_size = self$tf$shape(y_pred)[1] # Output dtype: tf.int32
-                           n_boxes = self$tf$shape(y_pred)[2] # Output dtype: tf.int32, note that `n_boxes` in this context denotes the total number of boxes per image, not the number of boxes per cell
+                           n_boxes = self$tf$shape(y_pred)[2] 
+                           #^ Output dtype: tf.int32, note that `n_boxes` in this context denotes the total number of boxes per image, not the number of boxes per cell
 
                            # 1: Compute the losses for class and box predictions for every box
-                           classification_loss = self$tf$to_float(self$log_loss(y_true[,,1:self$n_classes], y_pred[,,1:self$n_classes])) # Output shape: (batch_size, n_boxes)
+                           classification_loss = self$tf$to_float(self$log_loss(y_true[,,1:self$n_classes], y_pred[,,1:self$n_classes])) 
+                           #^ Output shape: (batch_size, n_boxes)
                            localization_loss = self$tf$to_float(self$smooth_L1_loss(y_true[,,(self$n_classes + 1):(self$n_classes + 4)], y_pred[,,(self$n_classes + 1):(self$n_classes + 4)])) # Output shape: (batch_size, n_boxes)
 
                            # 2: Compute the classification losses for the positive and negative targets
 
                            # Create masks for the positive and negative ground truth classes
                            negatives = y_true[,,1] # Tensor of shape (batch_size, n_boxes)
-                           positives = self$tf$to_float(self$tf$reduce_max(y_true[,,2:self$n_classes], axis=-1L)) # Tensor of shape (batch_size, n_boxes)
+                           positives = self$tf$to_float(self$tf$reduce_max(y_true[,,2:self$n_classes], axis=-1L)) 
+                           #^ Tensor of shape (batch_size, n_boxes)
 
                            # Count the number of positive boxes (classes 1 to n) in y_true across the whole batch
                            n_positive = self$tf$reduce_sum(positives)
@@ -58,8 +61,10 @@ SSDLoss <- R6::R6Class("SSDLoss",
                            # Compute the classification loss for the negative default boxes (if there are any)
 
                            # First, compute the classification loss for all negative boxes
-                           neg_class_loss_all = classification_loss * negatives # Tensor of shape (batch_size, n_boxes)
-                           n_neg_losses = self$tf$count_nonzero(neg_class_loss_all, dtype=self$tf$int32) # The number of non-zero loss entries in `neg_class_loss_all`
+                           neg_class_loss_all = classification_loss * negatives 
+                           #^ Tensor of shape (batch_size, n_boxes)
+                           n_neg_losses = self$tf$count_nonzero(neg_class_loss_all, dtype=self$tf$int32) 
+                           #^ The number of non-zero loss entries in `neg_class_loss_all`
 
                            # What's the point of `n_neg_losses`? For the next step, which will be to compute which negative boxes enter the classification
                            # loss, we don't just want to know how many negative ground truth boxes there are, but for how many of those there actually is

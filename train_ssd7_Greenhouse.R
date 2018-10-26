@@ -1,4 +1,4 @@
-devtools::install_github("adamkc/ssdkeras")
+#devtools::install_github("adamkc/ssdkeras")
 library(ssdkeras)
 library(keras)
 library(stringr)
@@ -44,7 +44,7 @@ predictor_sizes <- modelOut$predictor_sizes
 
 ### Set up training
 
-batch_size = 2L
+batch_size = 8L
 
 # 3: Instantiate an Adam optimizer and the SSD loss function and compile the model
 
@@ -78,7 +78,7 @@ ssd_box_encoder = SSDBoxEncoder$new(img_height=img_height,
 train_dataset = BatchGenerator$new(box_output_format = c('class_id', 'xmin', 'xmax', 'ymin', 'ymax')) # This is the format in which the generator is supposed to output the labels. At the moment it **must** be the format set here.
 
 train_dataset$parse_csv(
-  images_path = "C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse", # make sure to unzip the faces file and put here the correct paths
+  images_path = "data/Greenhouse", # make sure to unzip the faces file and put here the correct paths
   labels_path = "trainGH.csv",
   include_classes = 'all',
   input_format = c('image_name', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id')
@@ -103,7 +103,7 @@ n_train_samples = train_dataset$get_n_samples()
 
 val_dataset = BatchGenerator$new(box_output_format = c('class_id', 'xmin', 'xmax', 'ymin', 'ymax'))
 
-val_dataset$parse_csv(images_path = "C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse",
+val_dataset$parse_csv(images_path = "data/Greenhouse",
                       labels_path = "valGH.csv",
                       include_classes = 'all',
                       input_format = c('image_name', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id')
@@ -126,7 +126,7 @@ n_val_samples = val_dataset$get_n_samples()
 ### Run training
 
 # 6: Run training
-epochs = 25
+epochs = 3
 
 history = model$fit_generator(generator = reticulate::py_iterator(train_generator),
                               steps_per_epoch = ceiling(n_train_samples/batch_size),
@@ -176,7 +176,7 @@ X <- predGen[[1]]
 y_true <- predGen[[2]]
 filenames <- predGen[[3]]
 
-img <- jpeg::readJPEG(stringr::str_c("C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse/", filenames))
+img <- jpeg::readJPEG(stringr::str_c("data/Greenhouse/", filenames))
 plot.new()
 rasterImage(img, 0, 0, 1, 1)
 
@@ -186,7 +186,7 @@ y_pred = model$predict(X)
 
 # 4: Decode the raw prediction `y_pred`
 y_pred_decoded = decode_y2(y_pred,
-                           confidence_thresh = .999,
+                           confidence_thresh = .1,
                            iou_threshold = NULL,
                            top_k = 5L,
                            input_coords = 'centroids',

@@ -21,7 +21,7 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                  filenames = NULL,
                                  labels = NULL
                                ) {
-                                 library(magick)
+                                 suppressPackageStartupMessages(library(magick))
                                  # These are the variables we always need
                                  self$include_classes = NULL
                                  self$box_output_format = box_output_format
@@ -85,10 +85,9 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                  # Erase data that might have been parsed before
                                  # self$filenames <- list()
                                  # self$labels <- list()
+                                 suppressPackageStartupMessages(library(tidyverse, quietly = TRUE, warn.conflicts = FALSE))
 
-                                 library(tidyverse, quietly = TRUE, warn.conflicts = FALSE)
-
-                                 data <- readr::read_csv(self$labels_path) %>%
+                                 data <- readr::read_csv(self$labels_path,col_types = "ciiiii") %>%
                                    mutate(frameID = parse_number(frame)) %>%
                                    arrange(frameID, class_id, xmin, xmax, ymin, ymax) %>% # The data needs to be sorted, otherwise the next step won't give the correct result
                                    select(frame, class_id, xmin, xmax, ymin, ymax)
