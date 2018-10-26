@@ -147,7 +147,6 @@ decode_y2 <- function(
   #^ Slice out the four offset predictions plus two elements whereto we'll write the class IDs and confidences in the next step
   #I think C1 is class1prediction? and C2 is class2 prediction?
   y_pred_converted[, , 1] = np$argmax(y_pred[, , 1:n_classes], axis = -1L) 
-  y_pred_converted[, , 1] = y_pred_converted[, , 1] + 1
   #^ The indices of the highest confidence values in the one-hot class vectors are the class ID
   y_pred_converted[, , 2] = np$amax(y_pred[, , 1:n_classes], axis = -1L) 
   #^ Store the confidence values themselves, too
@@ -587,7 +586,7 @@ SSDBoxEncoder <- R6::R6Class("SSDBoxEncoder",
                                      #^ Get the indices of the left-over anchor boxes to which we want to assign this ground truth box
                                      if (length(assign_indices) > 0) { # If we have any matches
                                        y_encoded[i,assign_indices,1:(self$n_classes + 4)] = rep(
-                                         np$concatenate(reticulate::tuple(class_vector[true_box[1],], true_box[-1]), axis = 0L), ##Deleted the + 1 Here
+                                         np$concatenate(reticulate::tuple(class_vector[true_box[1] + 1,], true_box[-1]), axis = 0L), 
                                          each = length(assign_indices))
                                        #^ Write the ground truth box coordinates and class to all assigned anchor box positions. 
                                        #^ Remember that the last four elements of `y_encoded` are just dummy entries.
@@ -596,7 +595,7 @@ SSDBoxEncoder <- R6::R6Class("SSDBoxEncoder",
                                      } else { # If we don't have any matches
                                        best_match_index = np$argmax(similarities) + 1 # Get the index of the best iou match out of all available boxes
                                        y_encoded[i, best_match_index,1:(self$n_classes + 4)] = 
-                                         np$concatenate(reticulate::tuple(class_vector[true_box[1], ], true_box[-1]), axis=0L) ##Deleted the + 1 Here
+                                         np$concatenate(reticulate::tuple(class_vector[true_box[1] + 1, ], true_box[-1]), axis=0L) 
                                        #^ Write the ground truth box coordinates and class to the best match anchor box position
                                        available_boxes[best_match_index] = 0 # Make the assigned anchor box unavailable for the next ground truth box
                                        negative_boxes[best_match_index] = 0 # The assigned anchor box is no longer a negative box

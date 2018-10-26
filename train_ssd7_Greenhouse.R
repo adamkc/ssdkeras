@@ -10,7 +10,7 @@ K <- backend()
 img_height = 299 # Height of the input images
 img_width = 299 # Width of the input images
 img_channels = 3 # Number of color channels of the input images
-n_classes = 2L # Number of classes including the background class
+n_classes = 3L # Number of classes including the background class
 min_scale = 0.08 # The scaling factor for the smallest anchor boxes
 max_scale = 0.96 # The scaling factor for the largest anchor boxes
 scales = c(0.08, 0.16, 0.32, 0.64, 0.96) # An explicit list of anchor box scaling factors. If this is passed, it will override `min_scale` and `max_scale`.
@@ -44,7 +44,7 @@ predictor_sizes <- modelOut$predictor_sizes
 
 ### Set up training
 
-batch_size = 8L
+batch_size = 32L
 
 # 3: Instantiate an Adam optimizer and the SSD loss function and compile the model
 
@@ -126,7 +126,7 @@ n_val_samples = val_dataset$get_n_samples()
 ### Run training
 
 # 6: Run training
-epochs = 3
+epochs = 16
 
 history = model$fit_generator(generator = reticulate::py_iterator(train_generator),
                               steps_per_epoch = ceiling(n_train_samples/batch_size),
@@ -198,10 +198,6 @@ y_pred_decoded = decode_y2(y_pred,
 
 # 5: Draw the predicted boxes onto the image
 classes = c("greenhouse", "outdoor")
-
-img <- jpeg::readJPEG(stringr::str_c("C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse/", filenames))
-plot.new()
-rasterImage(img, 0, 0, 1, 1)
 
 if (length(y_true) > 0) {
   imgBoxes <- cbind(y_true[[1]][, 2:3] / img_width, 1 -  y_true[[1]][, 4:5] / img_height)
