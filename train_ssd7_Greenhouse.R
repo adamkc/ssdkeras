@@ -1,3 +1,4 @@
+devtools::install_github("adamkc/ssdkeras")
 library(ssdkeras)
 library(keras)
 library(stringr)
@@ -10,9 +11,9 @@ img_height = 299 # Height of the input images
 img_width = 299 # Width of the input images
 img_channels = 3 # Number of color channels of the input images
 n_classes = 2L # Number of classes including the background class
-min_scale = 0.0008 # The scaling factor for the smallest anchor boxes
+min_scale = 0.08 # The scaling factor for the smallest anchor boxes
 max_scale = 0.96 # The scaling factor for the largest anchor boxes
-#scales = c(0.08, 0.16, 0.32, 0.64, 0.96) # An explicit list of anchor box scaling factors. If this is passed, it will override `min_scale` and `max_scale`.
+scales = c(0.08, 0.16, 0.32, 0.64, 0.96) # An explicit list of anchor box scaling factors. If this is passed, it will override `min_scale` and `max_scale`.
 aspect_ratios = c(0.5, 1.0, 2.0) # The list of aspect ratios for the anchor boxes
 two_boxes_for_ar1 = TRUE # Whether or not you want to generate two anchor boxes for aspect ratio 1
 limit_boxes = FALSE # Whether or not you want to limit the anchor boxes to lie entirely within the image boundaries
@@ -165,7 +166,7 @@ predict_generator = val_dataset$generate(batch_size=1L,
                                          resize=FALSE,
                                          gray=FALSE,
                                          limit_boxes=TRUE,
-                                         include_thresh=0.4,
+                                         include_thresh=0.1,
                                          diagnostics=FALSE)
 
 # 2: Generate samples
@@ -175,25 +176,30 @@ X <- predGen[[1]]
 y_true <- predGen[[2]]
 filenames <- predGen[[3]]
 
+img <- jpeg::readJPEG(stringr::str_c("C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse/", filenames))
+plot.new()
+rasterImage(img, 0, 0, 1, 1)
+
+
 # 3: Make a prediction
 y_pred = model$predict(X)
 
 # 4: Decode the raw prediction `y_pred`
 y_pred_decoded = decode_y2(y_pred,
-                           confidence_thresh = 0.4,
-                           iou_threshold = 0.4,
-                           top_k = 'all',
+                           confidence_thresh = .999,
+                           iou_threshold = NULL,
+                           top_k = 5L,
                            input_coords = 'centroids',
                            normalize_coords = FALSE,
                            img_height = NULL,
                            img_width = NULL,
                            n_classes = n_classes,
-                           oneOfEach = TRUE)
+                           oneOfEach = FALSE)
 
 # 5: Draw the predicted boxes onto the image
-classes = c("eyes", "nose", "mouth")
+classes = c("greenhouse", "outdoor")
 
-img <- jpeg::readJPEG(stringr::str_c("C:/Users/adamcummings/Documents/ssdkeras/faces/", filenames))
+img <- jpeg::readJPEG(stringr::str_c("C:/Users/adamcummings/Documents/ssdkeras/data/Greenhouse/", filenames))
 plot.new()
 rasterImage(img, 0, 0, 1, 1)
 

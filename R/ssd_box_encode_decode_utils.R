@@ -143,10 +143,16 @@ decode_y2 <- function(
   }
 
   # 1: Convert the classes from one-hot encoding to their class ID
-  y_pred_converted = np$copy(y_pred[, , (n_classes - 1):(n_classes + 4), drop = FALSE]) # Slice out the four offset predictions plus two elements whereto we'll write the class IDs and confidences in the next step
-  y_pred_converted[, , 1] = np$argmax(y_pred[, , 1:n_classes], axis = -1L) # The indices of the highest confidence values in the one-hot class vectors are the class ID
-  y_pred_converted[, , 2] = np$amax(y_pred[, , 1:n_classes], axis = -1L) # Store the confidence values themselves, too
-
+  y_pred_converted = np$copy(y_pred[, , (n_classes - 1):(n_classes + 4), drop = FALSE]) 
+  #^ Slice out the four offset predictions plus two elements whereto we'll write the class IDs and confidences in the next step
+  #I think C1 is class1prediction? and C2 is class2 prediction?
+  y_pred_converted[, , 1] = np$argmax(y_pred[, , 1:n_classes], axis = -1L) 
+  y_pred_converted[, , 1] = y_pred_converted[, , 1] + 1
+  #^ The indices of the highest confidence values in the one-hot class vectors are the class ID
+  y_pred_converted[, , 2] = np$amax(y_pred[, , 1:n_classes], axis = -1L) 
+  #^ Store the confidence values themselves, too
+  #Now the first column is the classid and the second column is the confidence
+  
   # 2: Convert the box coordinates from the predicted anchor box offsets to predicted absolute coordinates
   if (input_coords == 'centroids') {
     y_pred_converted[, , c(5, 6)] = np$exp(y_pred_converted[, , c(5, 6)] * y_pred[, , c(n_classes + 11, n_classes + 12)]) # exp(ln(w(pred)/w(anchor)) / w_variance * w_variance) == w(pred) / w(anchor), exp(ln(h(pred)/h(anchor)) / h_variance * h_variance) == h(pred) / h(anchor)
@@ -173,20 +179,26 @@ decode_y2 <- function(
   y_pred_decoded = list()
   for (i in seq_len(dim(y_pred_converted)[1])) { # For each image in the batch...
     batch_item <- y_pred_converted[i, , ]
-    boxes = batch_item[unlist(np$nonzero(batch_item[, 1])) + 1, , drop = FALSE] # ...get all boxes that don't belong to the background class,...
-    boxes = boxes[boxes[, 2] >= confidence_thresh, , drop = FALSE] # ...then filter out those positive boxes for which the prediction confidence is too low and after that...
+    boxes = batch_item[unlist(np$nonzero(batch_item[, 1])) + 1, , drop = FALSE] 
+    #^ ...get all boxes that don't belong to the background class,...
+    boxes = boxes[boxes[, 2] >= confidence_thresh, , drop = FALSE] 
+    #^ ...then filter out those positive boxes for which the prediction confidence is too low and after that...
     if (oneOfEach) {
       boxes <- boxes %>% as_tibble() %>% group_by(V1) %>% top_n(1, V2) %>% as.matrix()
     } else {
       if (!is.null(iou_threshold)) { # ...if an IoU threshold is set...
-        boxes = greedy_nms2(boxes, iou_threshold = iou_threshold, coords = 'minmax') # ...perform NMS on the remaining boxes.
+        boxes = greedy_nms2(boxes, iou_threshold = iou_threshold, coords = 'minmax') 
+        #^ ...perform NMS on the remaining boxes.
       }
-      if (top_k != 'all' && !is.null(dim(boxes)) && dim(boxes)[1] > top_k) { # If we have more than `top_k` results left at this point...
-        top_k_indices = np$argpartition(boxes[, 2], kth = dim(boxes)[1] - top_k, axis = 0L)[(dim(boxes)[1] - top_k + 1):dim(boxes)[1]] + 1 # ...get the indices of the `top_k` highest-scoring boxes...
+      if (top_k != 'all' && !is.null(dim(boxes)) && dim(boxes)[1] > top_k) { 
+        #^ If we have more than `top_k` results left at this point...
+        top_k_indices = np$argpartition(boxes[, 2], kth = dim(boxes)[1] - top_k, axis = 0L)[(dim(boxes)[1] - top_k + 1):dim(boxes)[1]] + 1 
+        #^ ...get the indices of the `top_k` highest-scoring boxes...
         boxes = boxes[top_k_indices, ] # ...and keep only those boxes...
       }
     }
-    y_pred_decoded[[i]] <- if (is.null(boxes)) {matrix(, nrow = 0, ncol = 6)} else {boxes} # ...and now that we're done, append the array of final predictions for this batch item to the output list
+    y_pred_decoded[[i]] <- if (is.null(boxes)) {matrix(, nrow = 0, ncol = 6)} else {boxes} 
+    #^ ...and now that we're done, append the array of final predictions for this batch item to the output list
   }
 
 
