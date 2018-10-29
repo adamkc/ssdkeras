@@ -34,13 +34,13 @@ parseXML <- function(xml) {
 }
 
 
-data <- list.files("C:/Users/adamcummings/Documents/ssdkeras/Greenhouse", full.names = TRUE) %>%
+data <- list.files("data/Greenhouse", full.names = TRUE) %>%
   discard(!str_detect(., "xml")) %>%
   map(., read_xml) %>%
   map_dfr(parseXML)
 
 splitN <- 0.9
-imageNames <-list.files("C:/Users/adamcummings/Documents/ssdkeras/Greenhouse", full.names = FALSE) %>%
+imageNames <-list.files("data/Greenhouse", full.names = FALSE) %>%
   discard(str_detect(., "xml"))
 trainset <- sample(imageNames,size = ceiling(length(imageNames)*splitN),replace=FALSE)
 valset <- imageNames[!(imageNames %in% trainset)]

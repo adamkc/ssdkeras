@@ -88,9 +88,9 @@ train_dataset$parse_csv(
 train_generator = train_dataset$generate(batch_size = batch_size,
                                          train = TRUE,
                                          ssd_box_encoder = ssd_box_encoder,
-                                         #equalize = FALSE,
-                                         #brightness = c(0.5, 2, 0.5), # Randomly change brightness between 0.5 and 2 with probability 0.5
-                                         #flip = 0.5, # Randomly flip horizontally with probability 0.5
+                                         equalize = FALSE,
+                                         brightness = c(0.5, 2, 0.5), # Randomly change brightness between 0.5 and 2 with probability 0.5
+                                         flip = 0.5, # Randomly flip horizontally with probability 0.5
                                          #translate = list(c(5, 50), c(3, 30), 0.5), # Randomly translate by 5-50 pixels horizontally and 3-30 pixels vertically with probability 0.5
                                          #scale = c(0.75, 1.3, 0.5), # Randomly scale between 0.75 and 1.3 with probability 0.5
                                          #limit_boxes = TRUE,
@@ -126,7 +126,7 @@ n_val_samples = val_dataset$get_n_samples()
 ### Run training
 
 # 6: Run training
-epochs = 16
+epochs = 150
 
 history = model$fit_generator(generator = reticulate::py_iterator(train_generator),
                               steps_per_epoch = ceiling(n_train_samples/batch_size),
@@ -154,7 +154,23 @@ history = model$fit_generator(generator = reticulate::py_iterator(train_generato
 ### Make predictions
 
 # 1: Set the generator
-predict_generator = val_dataset$generate(batch_size=1L,
+# predict_generator = val_dataset$generate(batch_size=1L,
+#                                          train = FALSE,
+#                                          equalize = FALSE,
+#                                          brightness=FALSE,
+#                                          flip=FALSE,
+#                                          translate=FALSE,
+#                                          scale=FALSE,
+#                                          random_crop=FALSE,
+#                                          crop=FALSE,
+#                                          resize=FALSE,
+#                                          gray=FALSE,
+#                                          limit_boxes=TRUE,
+#                                          include_thresh=0.1,
+#                                          diagnostics=FALSE)
+
+
+predict_generator = train_dataset$generate(batch_size=1L,
                                          train = FALSE,
                                          equalize = FALSE,
                                          brightness=FALSE,
@@ -168,6 +184,8 @@ predict_generator = val_dataset$generate(batch_size=1L,
                                          limit_boxes=TRUE,
                                          include_thresh=0.1,
                                          diagnostics=FALSE)
+
+
 
 # 2: Generate samples
 predGen <- predict_generator()
@@ -186,7 +204,7 @@ y_pred = model$predict(X)
 
 # 4: Decode the raw prediction `y_pred`
 y_pred_decoded = decode_y2(y_pred,
-                           confidence_thresh = .1,
+                           confidence_thresh = .0001,
                            iou_threshold = NULL,
                            top_k = 5L,
                            input_coords = 'centroids',
@@ -200,7 +218,7 @@ y_pred_decoded = decode_y2(y_pred,
 classes = c("greenhouse", "outdoor")
 
 if (length(y_true) > 0) {
-  imgBoxes <- cbind(y_true[[1]][, 2:3] / img_width, 1 -  y_true[[1]][, 4:5] / img_height)
+  imgBoxes <- matrix(c(y_true[[1]][, 2:3] / img_width, 1 -  y_true[[1]][, 4:5] / img_height),ncol=4)
   rect(xleft = imgBoxes[, 1], xright = imgBoxes[, 2], ybottom = imgBoxes[, 3], ytop = imgBoxes[, 4], border = "green")
 }
 

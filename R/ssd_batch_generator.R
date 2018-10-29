@@ -87,7 +87,7 @@ BatchGenerator <- R6::R6Class("BatchGenerator",
                                  # self$labels <- list()
                                  suppressPackageStartupMessages(library(tidyverse, quietly = TRUE, warn.conflicts = FALSE))
 
-                                 data <- readr::read_csv(self$labels_path,col_types = "ciiiii") %>%
+                                 data <- read.csv(self$labels_path) %>%
                                    mutate(frameID = parse_number(frame)) %>%
                                    arrange(frameID, class_id, xmin, xmax, ymin, ymax) %>% # The data needs to be sorted, otherwise the next step won't give the correct result
                                    select(frame, class_id, xmin, xmax, ymin, ymax)
