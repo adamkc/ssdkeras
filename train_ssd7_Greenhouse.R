@@ -188,6 +188,7 @@ predict_generator = train_dataset$generate(batch_size=1L,
 
 
 # 2: Generate samples
+model2 <- load_model_hdf5("checkpoints3.h5")
 predGen <- predict_generator()
 
 X <- predGen[[1]]
