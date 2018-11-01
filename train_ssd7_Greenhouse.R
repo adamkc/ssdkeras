@@ -11,9 +11,10 @@ img_height = 299 # Height of the input images
 img_width = 299 # Width of the input images
 img_channels = 3 # Number of color channels of the input images
 n_classes = 3L # Number of classes including the background class
-min_scale = 0.08 # The scaling factor for the smallest anchor boxes
-max_scale = 0.96 # The scaling factor for the largest anchor boxes
-scales = c(0.08, 0.16, 0.32, 0.64, 0.96) # An explicit list of anchor box scaling factors. If this is passed, it will override `min_scale` and `max_scale`.
+min_scale = 0.02 # The scaling factor for the smallest anchor boxes
+max_scale = 0.32 # The scaling factor for the largest anchor boxes
+#scales = c(0.08, 0.16, 0.32, 0.64, 0.96) # An explicit list of anchor box scaling factors. If this is passed, it will override `min_scale` and `max_scale`.
+scales = c(0.02, 0.04, 0.08, 0.16, 0.32) # An explicit list of anchor box scaling factors. If this is passed, it will override `min_scale` and `max_scale`.
 aspect_ratios = c(0.5, 1.0, 2.0) # The list of aspect ratios for the anchor boxes
 two_boxes_for_ar1 = TRUE # Whether or not you want to generate two anchor boxes for aspect ratio 1
 limit_boxes = FALSE # Whether or not you want to limit the anchor boxes to lie entirely within the image boundaries
@@ -68,7 +69,7 @@ ssd_box_encoder = SSDBoxEncoder$new(img_height=img_height,
                                 two_boxes_for_ar1=two_boxes_for_ar1,
                                 limit_boxes=limit_boxes,
                                 variances=variances,
-                                pos_iou_threshold=0.5,
+                                pos_iou_threshold=0.2,
                                 neg_iou_threshold=0.2,
                                 coords=coords,
                                 normalize_coords=normalize_coords)
@@ -152,6 +153,8 @@ history = model$fit_generator(generator = reticulate::py_iterator(train_generato
                               ))
 
 ### Make predictions
+#model <- load_model_weights_hdf5(object = model,filepath = "checkpoints3.h5")
+
 
 # 1: Set the generator
 # predict_generator = val_dataset$generate(batch_size=1L,
@@ -188,7 +191,7 @@ predict_generator = train_dataset$generate(batch_size=1L,
 
 
 # 2: Generate samples
-model2 <- load_model_hdf5("checkpoints3.h5")
+
 predGen <- predict_generator()
 
 X <- predGen[[1]]
@@ -202,11 +205,11 @@ rasterImage(img, 0, 0, 1, 1)
 
 # 3: Make a prediction
 y_pred = model$predict(X)
-
+summary(y_pred[1,,1])
 # 4: Decode the raw prediction `y_pred`
 y_pred_decoded = decode_y2(y_pred,
                            confidence_thresh = .0001,
-                           iou_threshold = NULL,
+                           iou_threshold = .25,
                            top_k = 5L,
                            input_coords = 'centroids',
                            normalize_coords = FALSE,
